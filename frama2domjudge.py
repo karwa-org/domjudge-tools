@@ -2,6 +2,7 @@
 
 import csv
 import random
+import string
 
 # read TSV
 
@@ -15,11 +16,15 @@ with open(0) as f:
 
 # remove header
 
-teams = rows[3:]
+rows = rows[3:]
 
-# read teams
+# setup
 
-out = [
+teams = [
+	["teams", "1"]
+]
+
+accounts = [
 	["accounts", "1"]
 ]
 
@@ -32,16 +37,45 @@ def gen_pwd():
 
 	return f"{a}-{b}-{c}"
 
-for team in teams:
-	id_ = team[0]
+BASE_OTHER = 0000
+BASE_UCL = 1000
+BASE_UMONS = 2000
+
+# read teams
+
+for team in rows:
+	institution = team[10]
+	base = BASE_OTHER
+
+	if institution == "UCLouvain":
+		base = BASE_UCL
+
+	elif institution == "UMons":
+		base = BASE_UMONS
+
+	id_ = int(team[0])
 	teamname = team[9]
-	
+
 	user_1 = team[11]
 	user_2 = team[15]
 
-	out.append(["team", teamname, user_1.split()[0].lower(), gen_pwd()])
+	teams.append([id_, base + id_, 0, teamname, institution, institution, "BEL"])
 
-# write TSV (accounts.tsv)
+# read accounts
 
-for row in out:
-	print('\t'.join(map(lambda field: f'"{field}"', row)))
+for team in teams[1:]:
+	teamname = team[3]
+	username = "".join(filter(lambda x: x in string.ascii_letters or x in string.digits, teamname)).lower()
+	password = gen_pwd()
+
+	accounts.append(["team", teamname, username, password])
+
+# write TSV's (teams.tsv & accounts.tsv)
+
+def write_tsv(name, rows):
+	with open(f"{name}.tsv", "w") as f:
+		for row in rows:
+			f.write('\t'.join(map(lambda field: f'"{field}"', row)) + '\n')
+
+write_tsv("teams", teams)
+write_tsv("accounts", accounts)
