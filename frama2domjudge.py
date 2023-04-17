@@ -1,4 +1,5 @@
 # shit's documented here: https://ccs-specs.icpc.io/2021-11/ccs_system_requirements#teamstsv
+# adding data through jury interface: https://www.domjudge.org/snapshot/manual/import.html
 
 import csv
 import random
@@ -21,12 +22,14 @@ rows = rows[3:]
 # setup
 
 teams = [
-	["teams", "1"]
+	["teams", 1]
 ]
 
 accounts = [
-	["accounts", "1"]
+	["accounts", 1]
 ]
+
+random.seed(69)
 
 def gen_pwd():
 	WORDS = ["karwa", "karaoke", "kompetition", "konkours", "kalvitie", "koala", "kangourou", "kampus", "kwality"]
@@ -42,6 +45,8 @@ BASE_UCL = 1000
 BASE_UMONS = 2000
 
 # read teams
+
+team_map = {}
 
 for team in rows:
 	institution = team[10]
@@ -60,22 +65,24 @@ for team in rows:
 	user_2 = team[15]
 
 	teams.append([id_, base + id_, 0, teamname, institution, institution, "BEL"])
+	team_map[teamname] = id_
 
 # read accounts
 
 for team in teams[1:]:
 	teamname = team[3]
-	username = "".join(filter(lambda x: x in string.ascii_letters or x in string.digits, teamname)).lower()
+	username = "".join(filter(lambda x: x in string.ascii_letters, teamname)).lower()
 	password = gen_pwd()
 
-	accounts.append(["team", teamname, username, password])
+	id_ = str(team_map[teamname])
+	accounts.append(["team", username + id_, username + id_, password])
 
 # write TSV's (teams.tsv & accounts.tsv)
 
 def write_tsv(name, rows):
 	with open(f"{name}.tsv", "w") as f:
 		for row in rows:
-			f.write('\t'.join(map(lambda field: f'"{field}"', row)) + '\n')
+			f.write('\t'.join(map(str, row)) + '\n')
 
 write_tsv("teams", teams)
 write_tsv("accounts", accounts)
